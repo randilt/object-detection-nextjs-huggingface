@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ImageIcon,
   Loader,
+  Loader2,
   ScanSearch,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -15,79 +16,66 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import axios from "axios";
 export default function Page() {
-  const [file, setFile] = React.useState<File>();
-  const [imgData, setImgData] = React.useState<string>("" as string);
+  const [url, seturl] = React.useState<string>("");
+  const [label, setlabel] = React.useState<string>("");
   const [progress, setProgress] = React.useState<number>(0);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [showProgress, setShowProgress] = React.useState<boolean>(false);
   const [showProgressButton, setShowProgressButton] =
     React.useState<boolean>(false);
   const { edgestore } = useEdgeStore();
+
   return (
     <main className="flex flex-col items-center justify-start p-24 gap-2">
-      <div className="flex gap-2 items-center">
+      <form onSubmit={uploadFiles} className="flex gap-2 items-center">
         <ImageIcon />
-        <Input
-          type="file"
-          onChange={(e) => {
-            setFile(e.target.files?.[0]);
-          }}
-        />
-        <Button
-          onClick={async () => {
-            if (file) {
-              setLoading(true);
-              setShowProgressButton(true);
-              const res = await edgestore.publicFiles.upload({
-                file,
-                onProgressChange: (progress) => {
-                  // you can use this to show a progress bar
-                  setProgress(progress);
-                },
-              });
-              setLoading(false);
-              // you can run some server action or api here
-              // to add the necessary data to your database
-              // set the imgData to the url of the uploaded image file
-              setImgData(res.url);
-            }
-          }}
-        >
+        <Input name="files" type="file"></Input>
+        <Button disabled={loading} type="submit">
           {loading ? (
-            <Loader className="animate-spin" />
+            <Loader2 className="animate-spin" />
           ) : (
             <ScanSearch size={20} />
           )}
         </Button>
-      </div>
-
-      {showProgressButton && (
-        <Button
-          variant="ghost"
-          className="m-4"
-          onClick={() => setShowProgress(!showProgress)}
-        >
-          Show Progress {showProgress ? <ChevronDown /> : <ChevronRight />}
-        </Button>
-      )}
-      {showProgress && <Progress value={progress} className="w-[50%]" />}
-
-      {imgData && (
+      </form>
+      {url && (
         <>
-          <Image src={imgData} width={400} height={400} alt="uploaded image" />
+          <Image
+            src={url}
+            width={400}
+            height={400}
+            alt={"uploaded image"}
+          ></Image>
           <Link
-            href={imgData}
-            target="_blank"
+            href={url}
             className={cn(
               buttonVariants({ variant: "ghost" }),
               "text-xs text-muted-foreground"
             )}
-          >
-            View image
-          </Link>
+          ></Link>
         </>
       )}
+      {label && <p className="font-bold text-l">Detected: {label}</p>}
     </main>
   );
+  async function uploadFiles(event: any) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    setLoading(true);
+    const file = formData.get("files");
+    if (file === null) {
+      return;
+    }
+    const res = await edgestore.publicFiles.upload({
+      file: file as File,
+      onProgressChange: (progress) => {
+        // you can use this to show a progress bar
+        console.log(progress);
+      },
+    });
+    console.log(res);
+    setLoading(false);
+  }
 }
