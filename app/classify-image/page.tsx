@@ -22,9 +22,8 @@ export default function Page() {
   const [label, setlabel] = React.useState<string>("");
   const [progress, setProgress] = React.useState<number>(0);
   const [loading, setLoading] = React.useState<boolean>(false);
-  const [showProgress, setShowProgress] = React.useState<boolean>(false);
-  const [showProgressButton, setShowProgressButton] =
-    React.useState<boolean>(false);
+
+  React.useState<boolean>(false);
   const { edgestore } = useEdgeStore();
 
   return (
@@ -54,7 +53,9 @@ export default function Page() {
               buttonVariants({ variant: "ghost" }),
               "text-xs text-muted-foreground"
             )}
-          ></Link>
+          >
+            View image
+          </Link>
         </>
       )}
       {label && <p className="font-bold text-l">Detected: {label}</p>}
@@ -72,10 +73,13 @@ export default function Page() {
       file: file as File,
       onProgressChange: (progress) => {
         // you can use this to show a progress bar
+        setProgress(progress);
         console.log(progress);
       },
     });
     console.log(res);
+    seturl(res.url);
+
     setLoading(false);
   }
 }
