@@ -14,6 +14,7 @@ export default function Page() {
   const [imgData, setImgData] = React.useState<string>("" as string);
   const [progress, setProgress] = React.useState<number>(0);
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [showProgress, setShowProgress] = React.useState<boolean>(false);
   const { edgestore } = useEdgeStore();
   return (
     <main className="flex flex-col items-center justify-start p-24 gap-2">
@@ -29,6 +30,7 @@ export default function Page() {
           onClick={async () => {
             if (file) {
               setLoading(true);
+              setShowProgress(true);
               const res = await edgestore.publicFiles.upload({
                 file,
                 onProgressChange: (progress) => {
@@ -51,8 +53,8 @@ export default function Page() {
           )}
         </Button>
       </div>
+      {showProgress && <Progress value={progress} />}
 
-      <Progress value={progress} />
       {imgData && (
         <>
           <Image src={imgData} width={400} height={400} alt="uploaded image" />
