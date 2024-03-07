@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useEdgeStore } from "../../lib/edgestore";
 import { Progress } from "@/components/ui/progress";
+import { pipeline } from "@xenova/transformers";
 import { set } from "zod";
 import {
   ChevronDown,
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import axios from "axios";
 export default function Page() {
+  const [isDetected, setIsDetected] = React.useState<string>("");
   const [url, seturl] = React.useState<string>("");
   const [label, setlabel] = React.useState<string>("");
   const [progress, setProgress] = React.useState<number>(0);
@@ -39,6 +41,7 @@ export default function Page() {
           )}
         </Button>
       </form>
+      {progress > 0 && <Progress value={progress} className="w-[50%]" />}
       {url && (
         <>
           <Image
@@ -53,12 +56,19 @@ export default function Page() {
               buttonVariants({ variant: "ghost" }),
               "text-xs text-muted-foreground"
             )}
+            target="_blank"
           >
             View image
           </Link>
         </>
       )}
-      {label && <p className="font-bold text-l">Detected: {label}</p>}
+      {isDetected === "detecting" ? (
+        <p>Detecting objects please wait a moment...</p>
+      ) : label ? (
+        <p className="text-lg">{label}</p>
+      ) : (
+        <p>Please upload a clear image to detect objects!</p>
+      )}
     </main>
   );
   async function uploadFiles(event: any) {
@@ -79,7 +89,32 @@ export default function Page() {
     });
     console.log(res);
     seturl(res.url);
-
     setLoading(false);
+    //dtect objects using onnx local model
+    setIsDetected("detecting");
+
+    const detector = await pipeline(
+      "object-detection",
+      "Xenova/detr-resnet-50"
+    );
+    const output = await detector(res.url);
+    console.log(output);
+    const countObj: { [key: string]: number } = {};
+    output.forEach(({ score, label }: any) => {
+      if (score > 0.85) {
+        if (countObj[label]) {
+          countObj[label]++;
+        } else {
+          countObj[label] = 1;
+        }
+      }
+    });
+    setlabel(
+      Object.keys(countObj)
+        .map((key) => `${key} (${countObj[key]})`)
+        .join(", ")
+    );
+    setIsDetected("detected");
+    console.log(label);
   }
 }
