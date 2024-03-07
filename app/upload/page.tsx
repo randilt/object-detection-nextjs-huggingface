@@ -3,7 +3,13 @@ import * as React from "react";
 import { useEdgeStore } from "../../lib/edgestore";
 import { Progress } from "@/components/ui/progress";
 import { set } from "zod";
-import { ImageIcon, Loader, ScanSearch } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ImageIcon,
+  Loader,
+  ScanSearch,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Image from "next/image";
@@ -15,6 +21,8 @@ export default function Page() {
   const [progress, setProgress] = React.useState<number>(0);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [showProgress, setShowProgress] = React.useState<boolean>(false);
+  const [showProgressButton, setShowProgressButton] =
+    React.useState<boolean>(false);
   const { edgestore } = useEdgeStore();
   return (
     <main className="flex flex-col items-center justify-start p-24 gap-2">
@@ -30,7 +38,7 @@ export default function Page() {
           onClick={async () => {
             if (file) {
               setLoading(true);
-              setShowProgress(true);
+              setShowProgressButton(true);
               const res = await edgestore.publicFiles.upload({
                 file,
                 onProgressChange: (progress) => {
@@ -53,7 +61,17 @@ export default function Page() {
           )}
         </Button>
       </div>
-      {showProgress && <Progress value={progress} />}
+
+      {showProgressButton && (
+        <Button
+          variant="ghost"
+          className="m-4"
+          onClick={() => setShowProgress(!showProgress)}
+        >
+          Show Progress {showProgress ? <ChevronDown /> : <ChevronRight />}
+        </Button>
+      )}
+      {showProgress && <Progress value={progress} className="w-[50%]" />}
 
       {imgData && (
         <>
