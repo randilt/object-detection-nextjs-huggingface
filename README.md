@@ -1,4 +1,4 @@
-
+# Object detection app built with NEXTJS and Transformersjs API
 
 ## Getting Started
 
